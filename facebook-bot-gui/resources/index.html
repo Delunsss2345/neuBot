@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facebook Auto Comment Bot</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🤖 Facebook Auto Comment Bot</h1>
+        <p class="subtitle">Quản lý cấu hình bot tự động comment</p>
+      </header>
+
+      <div class="status-bar" id="statusBar">
+        <span class="status-indicator inactive" id="statusIndicator">●</span>
+        <span id="statusText">Chưa khởi động</span>
+      </div>
+
+      <main class="form-container">
+        <div class="form-group">
+          <label for="email">
+            <span class="label-icon">📧</span>
+            Email Facebook
+          </label>
+          <input
+            type="email"
+            id="email"
+            placeholder="email_cua_ban@example.com"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">
+            <span class="label-icon">🔐</span>
+            Mật khẩu
+          </label>
+          <div class="password-wrapper">
+            <input
+              type="password"
+              id="password"
+              placeholder="Nhập mật khẩu Facebook"
+              required
+            />
+            <button type="button" class="toggle-password" id="togglePassword">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="groupUrl">
+            <span class="label-icon">🔗</span>
+            URL Nhóm Facebook
+          </label>
+          <input
+            type="url"
+            id="groupUrl"
+            placeholder="https://www.facebook.com/groups/ten_nhom"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="commentText">
+            <span class="label-icon">💬</span>
+            Nội dung Comment
+          </label>
+          <textarea
+            id="commentText"
+            rows="8"
+            placeholder="Nhập nội dung comment tại đây..."
+            required
+          ></textarea>
+          <div class="char-count"><span id="charCount">0</span> ký tự</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="checkInterval">
+              <span class="label-icon">⏰</span>
+              Kiểm tra (giây)
+            </label>
+            <input
+              type="number"
+              id="checkInterval"
+              value="60"
+              min="30"
+              max="600"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="delayMin">
+              <span class="label-icon">⏱️</span>
+              Delay min (ms)
+            </label>
+            <input
+              type="number"
+              id="delayMin"
+              value="2000"
+              min="1000"
+              max="10000"
+              step="100"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="delayMax">
+              <span class="label-icon">⏲️</span>
+              Delay max (ms)
+            </label>
+            <input
+              type="number"
+              id="delayMax"
+              value="5000"
+              min="1000"
+              max="10000"
+              step="100"
+            />
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-primary" id="saveConfig">
+            💾 Lưu cấu hình
+          </button>
+          <button class="btn btn-success" id="startBot" disabled>
+            ▶️ Chạy Bot
+          </button>
+          <button class="btn btn-danger" id="stopBot" disabled>
+            ⏹️ Dừng Bot
+          </button>
+          <button class="btn btn-secondary" id="loadConfig">
+            📂 Tải cấu hình
+          </button>
+        </div>
+      </main>
+
+      <footer>
+        <div class="logs-container">
+          <h3>📋 Nhật ký hoạt động</h3>
+          <div class="logs" id="logs">
+            <p class="log-info">Chờ lệnh...</p>
+          </div>
+          <button class="btn btn-small" id="clearLogs">🗑️ Xóa logs</button>
+        </div>
+      </footer>
+    </div>
+
+    <script src="js/neutralino.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
