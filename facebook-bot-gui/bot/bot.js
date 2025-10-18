@@ -10,6 +10,7 @@ class FacebookAutoCommentBot {
     this.page = null;
     this.processedPosts = new Set();
     this.config = null;
+    this.isRunning = false;
   }
 
   async loadConfig() {
@@ -41,40 +42,51 @@ class FacebookAutoCommentBot {
         "--lang=vi-VN,vi",
       ],
       defaultViewport: { width: 1280, height: 800 },
+      userDataDir: "./user-data",
     });
 
-    this.page = await this.browser.newPage();
+    const pages = await this.browser.pages();
+    this.page = pages[0] || (await this.browser.newPage());
+
     await this.page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     );
     console.log("✅ Browser đã khởi động");
   }
 
-  async login() {
+  async checkLogin() {
     try {
-      console.log("🔐 Đang đăng nhập Facebook...");
+      console.log("🔍 Đang kiểm tra đăng nhập...");
+
       await this.page.goto("https://www.facebook.com/", {
-        waitUntil: "networkidle2",
-      });
-
-      await this.randomDelay();
-      await this.page.type("#email", this.config.email, { delay: 100 });
-      await this.randomDelay();
-      await this.page.type("#pass", this.config.password, { delay: 100 });
-      await this.randomDelay();
-      await this.page.click('button[name="login"]');
-
-      console.log("⏳ Đang chờ đăng nhập...");
-      await this.page.waitForNavigation({
         waitUntil: "networkidle2",
         timeout: 30000,
       });
 
-      console.log("✅ Đăng nhập thành công!");
       await this.randomDelay();
-      return true;
+
+      const isLoggedIn = await this.page.evaluate(() => {
+        return (
+          document.querySelector('[aria-label="Tài khoản"]') !== null ||
+          document.querySelector('[aria-label="Account"]') !== null ||
+          document.querySelector('[data-visualcompletion="ignore-dynamic"]') !==
+            null
+        );
+      });
+
+      if (isLoggedIn) {
+        console.log("✅ Đã đăng nhập!");
+        return true;
+      } else {
+        console.log("⚠️ Chưa đăng nhập. Vui lòng đăng nhập thủ công...");
+        console.log("⏳ Chờ 60 giây để bạn đăng nhập...");
+
+        await new Promise((resolve) => setTimeout(resolve, 60000));
+
+        return await this.checkLogin();
+      }
     } catch (error) {
-      console.error("❌ Lỗi đăng nhập:", error.message);
+      console.error("❌ Lỗi kiểm tra đăng nhập:", error.message);
       return false;
     }
   }
@@ -184,8 +196,20 @@ class FacebookAutoCommentBot {
     console.log("👀 Bắt đầu theo dõi nhóm...");
     console.log(`⏰ Kiểm tra mỗi ${this.config.checkInterval / 1000} giây`);
 
-    while (true) {
+    this.isRunning = true;
+
+    while (this.isRunning) {
       try {
+        // Check if stop flag exists
+        try {
+          await fs.access("./bot-stop.flag");
+          console.log("🛑 Nhận lệnh dừng bot");
+          await fs.unlink("./bot-stop.flag");
+          break;
+        } catch {
+          // File doesn't exist, continue
+        }
+
         await this.page.reload({ waitUntil: "networkidle2" });
         await this.randomDelay();
 
@@ -224,17 +248,15 @@ class FacebookAutoCommentBot {
       await this.loadConfig();
       await this.initialize();
 
-      const loginSuccess = await this.login();
+      const loginSuccess = await this.checkLogin();
       if (!loginSuccess) {
-        console.error(
-          "❌ Không thể đăng nhập. Vui lòng kiểm tra lại thông tin."
-        );
+        console.error("❌ Không thể đăng nhập.");
         return;
       }
 
       const groupSuccess = await this.navigateToGroup();
       if (!groupSuccess) {
-        console.error("❌ Không thể vào nhóm. Vui lòng kiểm tra URL nhóm.");
+        console.error("❌ Không thể vào nhóm.");
         return;
       }
 
@@ -245,6 +267,7 @@ class FacebookAutoCommentBot {
   }
 
   async stop() {
+    this.isRunning = false;
     if (this.browser) {
       await this.browser.close();
       console.log("🛑 Bot đã dừng");
